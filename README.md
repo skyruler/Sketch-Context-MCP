@@ -1,6 +1,6 @@
 > **Note:** This project is currently in testing phase and may not be fully stable.
 
-# Sketch Cursor MCP
+# Sketch Context MCP
 
 A Model Context Protocol (MCP) server for integrating Sketch designs with IDEs such as Cursor, Cline, or Windsurf.
 
@@ -12,12 +12,19 @@ This tool allows Cursor IDE to access and interpret Sketch design files, enablin
 2. Implementing the MCP protocol that Cursor or other IDEs use for context
 3. Allowing you to reference specific components and layers from your Sketch files
 
+## Components
+
+This project consists of two main components:
+
+1. **MCP Server**: A Node.js server that implements the Model Context Protocol to provide Sketch file data to Cursor IDE
+2. **Sketch Selection Helper Plugin**: A Sketch plugin that helps you copy selection IDs to use with the MCP server
+
 ## Supported Features
 
 - Local and Cloud Sketch file parsing
 - Component/Symbol extraction
 - Asset management and automatic downloads
-- Selection links support
+- Selection links support via the Sketch Selection Helper plugin
 - Real-time updates via SSE
 - Parsing both local and Sketch Cloud-hosted files
 - Extracting document structure and component information
@@ -133,16 +140,48 @@ Once the MCP server is connected, you can start using it with Cursor:
 
 For example, you could say: "Analyze this Sketch design and create a React component that matches the layout"
 
-### Working with Selection Links
+## Working with Selection Links
 
 To reference specific elements in your Sketch file:
 
-1. Select elements in Sketch
-2. Use File > Copy Link to Selection (or the keyboard shortcut)
-3. Paste the link in Cursor's composer
-4. Ask Cursor to work with the selected elements
+1. Install the Sketch Selection Helper plugin (see below)
+2. Select elements in Sketch
+3. Run the plugin from the Plugins menu (or use the keyboard shortcut)
+4. The IDs will be copied to your clipboard
+5. Use these IDs when talking to Cursor about specific elements
 
-### Working with Components
+### Installing the Sketch Selection Helper Plugin
+
+The plugin helps you get the IDs of selected elements in Sketch to use with the MCP server.
+
+#### Automatic Installation
+
+Run the installation script:
+
+```bash
+./install-plugin.sh
+```
+
+#### Manual Installation
+
+1. Copy the `sketch-selection-helper.sketchplugin` folder to your Sketch plugins directory:
+   ```
+   ~/Library/Application Support/com.bohemiancoding.sketch3/Plugins/
+   ```
+2. Restart Sketch if it's already running
+
+#### Using the Plugin
+
+1. Open a Sketch document
+2. Select one or more layers
+3. Go to Plugins > Sketch Selection Helper > Copy Selection IDs
+4. The IDs will be copied to your clipboard
+5. Use these IDs with the MCP server to reference specific elements
+
+For example, after copying the IDs, you might ask Cursor:
+"Analyze the button with ID 12345 from the Sketch design"
+
+## Working with Components
 
 To reference specific components in your Sketch file:
 
@@ -151,7 +190,7 @@ To reference specific components in your Sketch file:
 3. Copy its ID or create a link to it
 4. Use this ID/link when talking to Cursor
 
-### Asset Management
+## Asset Management
 
 Assets are automatically handled when:
 - Accessing components with images

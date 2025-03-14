@@ -125,7 +125,7 @@ const TOOLS = [
         selectionIds: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Array of selected element IDs',
+          description: 'Array of selected element IDs from the Sketch Selection Helper plugin',
         }
       },
       required: ['url', 'selectionIds'],
@@ -157,6 +157,8 @@ app.post('/messages', async (req, res) => {
         result = await getSketchFile(params.url, params.nodeId);
       } else if (tool === 'list_components') {
         result = await listSketchComponents(params.url);
+      } else if (tool === 'get_selection') {
+        result = await getSketchSelection(params.url, params.selectionIds);
       } else {
         return res.status(400).json({
           type: 'error',
@@ -452,6 +454,8 @@ if (config.isStdioMode) {
           result = await getSketchFile(params.url, params.nodeId);
         else if (tool === 'list_components')
           result = await listSketchComponents(params.url);
+        else if (tool === 'get_selection')
+          result = await getSketchSelection(params.url, params.selectionIds);
         else
           throw new Error(`Unknown tool: ${tool}`);
         
@@ -533,6 +537,38 @@ function enrichNodeData(node) {
       class: node._class
     }
   };
+}
+
+// Function to get information about selected elements
+async function getSketchSelection(url, selectionIds) {
+  try {
+    // Get the full document data
+    const documentData = await getSketchFile(url);
+    
+    // Find the selected nodes
+    const selectedNodes = [];
+    
+    for (const id of selectionIds) {
+      // Search for the node in the document
+      const node = findNodeById(documentData, id);
+      
+      if (node) {
+        // Enrich the node with additional context
+        selectedNodes.push(enrichNodeData(node));
+      }
+    }
+    
+    // Return the selection data
+    return {
+      url: url,
+      selectionCount: selectedNodes.length,
+      selectedNodes: selectedNodes,
+      missingIds: selectionIds.filter(id => !selectedNodes.some(node => node.metadata.id === id))
+    };
+  } catch (error) {
+    console.error('Error getting selection:', error);
+    throw error;
+  }
 }
 
 httpServer.listen(config.port, () => {

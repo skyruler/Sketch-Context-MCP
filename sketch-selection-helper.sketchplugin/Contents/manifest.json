@@ -1,0 +1,26 @@
+{
+  "name": "Sketch Selection Helper",
+  "identifier": "com.sketch-context-mcp.selection-helper",
+  "version": "1.0",
+  "description": "Copy selection IDs to clipboard for use with Sketch Context MCP",
+  "author": "Sketch Context MCP",
+  "authorEmail": "joshua@jshmllr.com",
+  "compatibleVersion": "70.0",
+  "bundleVersion": 1,
+  "icon": "icon.png",
+  "commands": [
+    {
+      "script": "script.js",
+      "handler": "onRun",
+      "shortcut": "ctrl shift i",
+      "name": "Copy Selection IDs",
+      "identifier": "copy-selection-ids"
+    }
+  ],
+  "menu": {
+    "title": "Sketch Selection Helper",
+    "items": [
+      "copy-selection-ids"
+    ]
+  }
+} 
