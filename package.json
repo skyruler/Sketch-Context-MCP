@@ -1,10 +1,10 @@
 {
-  "name": "sketch-context-mcp-",
+  "name": "sketch-context-mcp",
   "version": "1.0.0",
-  "description": "A Machine Context Protocol (MCP) server for integrating Sketch designs with Cursor IDE.",
+  "description": "A Model Context Protocol (MCP) server for integrating Sketch designs with Cursor IDE.",
   "main": "index.js",
   "bin": {
-    "sketch-cursor-mcp": "./index.js"
+    "sketch-context-mcp": "./index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

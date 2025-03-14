@@ -1,13 +1,13 @@
 # Sketch Cursor MCP
 
-A Machine Context Protocol (MCP) server for integrating Sketch designs with IDEs such as Cursor, Cline, or Windsurf.
+A Model Context Protocol (MCP) server for integrating Sketch designs with IDEs such as Cursor, Cline, or Windsurf.
 
 ## Overview
 
 This tool allows Cursor IDE to access and interpret Sketch design files, enabling AI-powered design-to-code workflows. It works by:
 
 1. Providing a server that parses Sketch files (.sketch)
-2. Implementing the MCP protocol that Cursor or other IDES uses for context
+2. Implementing the MCP protocol that Cursor or other IDEs use for context
 3. Allowing you to reference specific components and layers from your Sketch files
 
 ## Supported Features
@@ -32,19 +32,19 @@ This tool allows Cursor IDE to access and interpret Sketch design files, enablin
 ### Installation
 
 ```bash
-npm install -g sketch-cursor-mcp
+npm install -g sketch-context-mcp
 ```
 
 Or run directly with npx:
 
 ```bash
-npx sketch-cursor-mcp --sketch-api-key=<your-sketch-api-key>
+npx sketch-context-mcp --sketch-api-key=<your-sketch-api-key>
 ```
 
 ### Local File Usage
 
 ```bash
-npx sketch-cursor-mcp --local-file=/path/to/your/file.sketch
+npx sketch-context-mcp --local-file=/path/to/your/file.sketch
 ```
 
 ### Getting Your Sketch API Key
@@ -83,7 +83,7 @@ The server can be configured using either environment variables (via `.env` file
 ### Start the Server
 
 ```bash
-npx sketch-cursor-mcp --sketch-api-key=<your-sketch-api-key>
+npx sketch-context-mcp --sketch-api-key=<your-sketch-api-key>
 ```
 
 You should see output similar to:
@@ -158,7 +158,7 @@ The server will automatically:
 To enable detailed logging, set the DEBUG environment variable:
 
 ```bash
-DEBUG=sketch-mcp:* npx sketch-cursor-mcp
+DEBUG=sketch-mcp:* npx sketch-context-mcp
 ```
 
 ## Contributing
