@@ -7,7 +7,7 @@ A Machine Context Protocol (MCP) server for integrating Sketch designs with IDEs
 This tool allows Cursor IDE to access and interpret Sketch design files, enabling AI-powered design-to-code workflows. It works by:
 
 1. Providing a server that parses Sketch files (.sketch)
-2. Implementing the MCP protocol that Cursor IDE uses for context
+2. Implementing the MCP protocol that Cursor or other IDES uses for context
 3. Allowing you to reference specific components and layers from your Sketch files
 
 ## Supported Features
@@ -41,6 +41,12 @@ Or run directly with npx:
 npx sketch-cursor-mcp --sketch-api-key=<your-sketch-api-key>
 ```
 
+### Local File Usage
+
+```bash
+npx sketch-cursor-mcp --local-file=/path/to/your/file.sketch
+```
+
 ### Getting Your Sketch API Key
 
 To use this tool with Sketch Cloud files, you'll need a Sketch API key:
@@ -51,7 +57,7 @@ To use this tool with Sketch Cloud files, you'll need a Sketch API key:
 4. Create a new API key with appropriate permissions
 5. Copy the generated API key
 
-Note: For local Sketch files, an API key is not required.
+Note: **For local Sketch files**, an API key is not required.
 
 ## Configuration
 
@@ -61,6 +67,8 @@ The server can be configured using either environment variables (via `.env` file
 
 * `SKETCH_API_KEY`: Your Sketch API access token (required for Sketch Cloud files)
 * `PORT`: The port to run the server on (default: 3333)
+* `LOCAL_SKETCH_PATH`: Path to local Sketch file (alternative to --local-file argument)
+* `DEBUG_LEVEL`: Set logging verbosity (default: 'info')
 
 ### Command-line Arguments
 
