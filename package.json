@@ -8,7 +8,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "start:local": "node index.js --local-file=./example.sketch",
+    "start:cloud": "node index.js --sketch-api-key=$SKETCH_API_KEY"
   },
   "keywords": [],
   "author": "",
@@ -20,10 +22,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.6.9",
     "tmp": "^0.2.3",
     "yargs": "^17.7.2",
-    "sketch-api-client": "^1.0.0",
     "sharp": "^0.32.0",
     "chokidar": "^3.5.3"
   }

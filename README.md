@@ -1,3 +1,5 @@
+> **Note:** This project is currently in testing phase and may not be fully stable.
+
 # Sketch Cursor MCP
 
 A Model Context Protocol (MCP) server for integrating Sketch designs with IDEs such as Cursor, Cline, or Windsurf.
@@ -27,37 +29,53 @@ This tool allows Cursor IDE to access and interpret Sketch design files, enablin
 ### Prerequisites
 
 - Node.js (v14 or later)
-- A Sketch account with API access
+- A Sketch account with API access (only needed for Sketch Cloud files)
 
 ### Installation
 
 ```bash
+# Install globally
 npm install -g sketch-context-mcp
+
+# Run with a local Sketch file
+sketch-context-mcp --local-file=/path/to/your/file.sketch
+
+# Run with Sketch Cloud access
+sketch-context-mcp --sketch-api-key=<your-sketch-api-key>
 ```
 
 Or run directly with npx:
 
 ```bash
-npx sketch-context-mcp --sketch-api-key=<your-sketch-api-key>
-```
-
-### Local File Usage
-
-```bash
 npx sketch-context-mcp --local-file=/path/to/your/file.sketch
 ```
 
-### Getting Your Sketch API Key
+### Integration with Cursor
 
-To use this tool with Sketch Cloud files, you'll need a Sketch API key:
+To use this with Cursor:
 
-1. Log in to your Sketch account at [sketch.com](https://www.sketch.com/)
-2. Navigate to your account settings
-3. Go to the "API Keys" or "Integrations" section
-4. Create a new API key with appropriate permissions
-5. Copy the generated API key
+1. Start the MCP server with your Sketch file:
+   ```bash
+   sketch-context-mcp --local-file=/path/to/your/file.sketch
+   ```
 
-Note: **For local Sketch files**, an API key is not required.
+2. In Cursor, connect to the MCP server:
+   - Go to Settings > Features > Context
+   - Enter the URL: `http://localhost:3333`
+   - Click "Connect"
+
+3. In the Cursor composer, you can now:
+   - Reference components by ID: "Show me the component with ID 12345"
+   - List all components: "List all components in the design"
+   - Get details about specific elements: "Describe the button in the header"
+
+### Working with Sketch Files
+
+Since Sketch doesn't have a built-in "Copy Link to Selection" feature like Figma, you can:
+
+1. Use the `list_components` tool to see all available components
+2. Reference specific components by their ID
+3. Use the Sketch plugin API to export selection IDs (see the Sketch Plugin section below)
 
 ## Configuration
 

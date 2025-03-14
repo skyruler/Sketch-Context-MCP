@@ -33,6 +33,10 @@ const argv = yargs(hideBin(process.argv))
     type: 'boolean',
     default: false,
   })
+  .option('local-file', {
+    description: 'Path to a local Sketch file to serve',
+    type: 'string',
+  })
   .help()
   .version()
   .alias('help', 'h')
@@ -43,6 +47,7 @@ const config = {
   sketchApiKey: argv['sketch-api-key'] || process.env.SKETCH_API_KEY,
   port: argv.port || process.env.PORT || 3333,
   isStdioMode: argv.stdio || false,
+  localFilePath: argv['local-file'] || process.env.LOCAL_SKETCH_PATH,
 };
 
 // Initialize Express app
@@ -218,16 +223,10 @@ async function getSketchFile(url, nodeId) {
   return documentData;
 }
 
-// Function to get file from Sketch Cloud
-async function getSketchCloudFile(url) {
+// Function to fetch document from Sketch Cloud
+async function fetchCloudDocument(documentId) {
   if (!config.sketchApiKey) {
-    throw new Error('Sketch API key is required to access Sketch Cloud files');
-  }
-  
-  // Extract document ID from URL
-  const documentId = extractDocumentIdFromUrl(url);
-  if (!documentId) {
-    throw new Error('Invalid Sketch Cloud URL');
+    throw new Error('Sketch API key is required for cloud files');
   }
   
   // Call Sketch Cloud API to get document details
@@ -492,6 +491,48 @@ function handleError(error) {
 function getSuggestionForError(error) {
   // Implement logic to generate a suggestion based on the error
   return 'Please try again later or contact support for assistance.';
+}
+
+// Add implementation for parseLocalSketchFile
+async function parseLocalSketchFile(url) {
+  // If url is a local file path, use it directly
+  // Otherwise, if we have a default local file configured, use that
+  const filePath = url.startsWith('/') || url.includes(':\\') 
+    ? url 
+    : config.localFilePath;
+  
+  if (!filePath) {
+    throw new Error('No local Sketch file specified. Use --local-file parameter or set LOCAL_SKETCH_PATH environment variable.');
+  }
+  
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Local Sketch file not found: ${filePath}`);
+  }
+  
+  // Read the file and parse it
+  const buffer = fs.readFileSync(filePath);
+  return parseSketchBuffer(buffer);
+}
+
+// Helper function to find a node with metadata
+function findNodeWithMetadata(obj, nodeId) {
+  const node = findNodeById(obj, nodeId);
+  if (!node) return null;
+  return node;
+}
+
+// Helper function to enrich node data with context
+function enrichNodeData(node) {
+  // Add additional context like parent information, styling, etc.
+  return {
+    node: node,
+    type: node._class,
+    metadata: {
+      id: node.do_objectID,
+      name: node.name,
+      class: node._class
+    }
+  };
 }
 
 httpServer.listen(config.port, () => {
