@@ -11,31 +11,36 @@ This tool allows Cursor IDE to access and interpret Sketch design files, enablin
 1. Providing a server that parses Sketch files (.sketch)
 2. Implementing the MCP protocol that Cursor or other IDEs use for context
 3. Allowing you to reference specific components and layers from your Sketch files
+4. Providing a UI interface for Sketch that communicates with Cursor
 
 ## Components
 
 This project consists of two main components:
 
 1. **MCP Server**: A Node.js server that implements the Model Context Protocol to provide Sketch file data to Cursor IDE
-2. **Sketch Selection Helper Plugin**: A Sketch plugin that helps you copy selection IDs to use with the MCP server
+2. **Sketch Plugin**: A Sketch plugin with UI interface that communicates with the MCP server via WebSockets
 
 ## Supported Features
 
 - Local and Cloud Sketch file parsing
 - Component/Symbol extraction
 - Asset management and automatic downloads
-- Selection links support via the Sketch Selection Helper plugin
-- Real-time updates via SSE
+- Selection links support via the Sketch plugin
+- Real-time updates via WebSockets and SSE
+- Interactive UI for connecting Sketch to Cursor
 - Parsing both local and Sketch Cloud-hosted files
 - Extracting document structure and component information
 - Accessing specific nodes by ID
 - Listing all components in a Sketch file
+- Creating rectangles, text and other elements via commands from Cursor
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (v14 or later)
+- Sketch (v70 or later)
+- Cursor IDE or similar
 - A Sketch account with API access (only needed for Sketch Cloud files)
 
 ### Installation
@@ -57,6 +62,12 @@ Or run directly with npx:
 npx sketch-context-mcp --local-file=/path/to/your/file.sketch
 ```
 
+### Installing the Sketch Plugin
+
+1. Download the latest release of the plugin from the [releases page](https://github.com/yourusername/sketch-context-mcp/releases)
+2. Double-click the `.sketchplugin` file to install it in Sketch
+3. The plugin will be available in Sketch under Plugins > Sketch Context MCP
+
 ### Integration with Cursor
 
 To use this with Cursor:
@@ -66,23 +77,21 @@ To use this with Cursor:
    sketch-context-mcp --local-file=/path/to/your/file.sketch
    ```
 
-2. In Cursor, connect to the MCP server:
-   - Go to Settings > Features > Context
-   - Enter the URL: `http://localhost:3333`
+2. In Sketch, open the plugin:
+   - Go to Plugins > Sketch Context MCP > Open MCP Interface
+   - Enter the server port (default: 3333)
    - Click "Connect"
 
-3. In the Cursor composer, you can now:
+3. In Cursor, connect to the MCP server:
+   - Go to Settings > Features > Context
+   - Add a new MCP server with the URL: `http://localhost:3333/sse`
+   - Click "Connect"
+
+4. In the Cursor composer, you can now:
    - Reference components by ID: "Show me the component with ID 12345"
    - List all components: "List all components in the design"
    - Get details about specific elements: "Describe the button in the header"
-
-### Working with Sketch Files
-
-Since Sketch doesn't have a built-in "Copy Link to Selection" feature like Figma, you can:
-
-1. Use the `list_components` tool to see all available components
-2. Reference specific components by their ID
-3. Use the Sketch plugin API to export selection IDs (see the Sketch Plugin section below)
+   - Create new elements: "Create a rectangle with width 200 and height 100"
 
 ## Configuration
 
@@ -103,104 +112,43 @@ The server can be configured using either environment variables (via `.env` file
 * `--stdio`: Run the server in command mode, instead of default HTTP/SSE
 * `--help`: Show help menu
 
-## Connecting to Cursor
+## Using the Sketch Plugin
 
-### Start the Server
+### Connection Tab
 
-```bash
-npx sketch-context-mcp --sketch-api-key=<your-sketch-api-key>
-```
+The Connection tab allows you to connect to the Sketch Context MCP server:
 
-You should see output similar to:
-```
-Initializing Sketch MCP Server in HTTP mode on port 3333...
-HTTP server listening on port 3333
-SSE endpoint available at http://localhost:3333/sse
-Message endpoint available at http://localhost:3333/messages
-```
+1. Enter the port number (default is 3333)
+2. Click "Connect" to establish a WebSocket connection
+3. Once connected, you'll see a confirmation message with the channel ID
+4. Follow the instructions for connecting Cursor to the server
 
-### Connect Cursor to the MCP Server
+### Selection Tab
 
-1. Open Cursor IDE
-2. Go to Settings (⚙️)
-3. Navigate to the Features tab
-4. Find the "Context" section
-5. Enter the URL for your MCP server: `http://localhost:3333`
-6. Click "Connect"
+The Selection tab displays information about selected layers in your Sketch document:
 
-After the server has been connected, you should see a green status indicator in Cursor's settings.
+1. Select one or more layers in your Sketch document
+2. The selected layers will be displayed in the list
+3. Click "Copy Selection IDs" to copy the layer IDs to your clipboard
+4. Use these IDs in Cursor to reference specific layers
+
+### About Tab
+
+The About tab provides information about the plugin and how to use it.
 
 ## Using with Cursor
 
-Once the MCP server is connected, you can start using it with Cursor:
+Once both Sketch and Cursor are connected to the MCP server:
 
-1. Make sure you're using Cursor in agent mode
-2. Drop a link to a Sketch file in the Cursor composer
-3. Ask Cursor to analyze or work with the design
+1. Select elements in Sketch
+2. Copy their IDs using the Sketch Context MCP plugin
+3. In Cursor, reference these elements by their IDs
 
-For example, you could say: "Analyze this Sketch design and create a React component that matches the layout"
+Example commands in Cursor:
 
-## Working with Selection Links
-
-To reference specific elements in your Sketch file:
-
-1. Install the Sketch Selection Helper plugin (see below)
-2. Select elements in Sketch
-3. Run the plugin from the Plugins menu (or use the keyboard shortcut)
-4. The IDs will be copied to your clipboard
-5. Use these IDs when talking to Cursor about specific elements
-
-### Installing the Sketch Selection Helper Plugin
-
-The plugin helps you get the IDs of selected elements in Sketch to use with the MCP server.
-
-#### Automatic Installation
-
-Run the installation script:
-
-```bash
-./install-plugin.sh
-```
-
-#### Manual Installation
-
-1. Copy the `sketch-selection-helper.sketchplugin` folder to your Sketch plugins directory:
-   ```
-   ~/Library/Application Support/com.bohemiancoding.sketch3/Plugins/
-   ```
-2. Restart Sketch if it's already running
-
-#### Using the Plugin
-
-1. Open a Sketch document
-2. Select one or more layers
-3. Go to Plugins > Sketch Selection Helper > Copy Selection IDs
-4. The IDs will be copied to your clipboard
-5. Use these IDs with the MCP server to reference specific elements
-
-For example, after copying the IDs, you might ask Cursor:
-"Analyze the button with ID 12345 from the Sketch design"
-
-## Working with Components
-
-To reference specific components in your Sketch file:
-
-1. Open your Sketch file
-2. Select the component you want to reference
-3. Copy its ID or create a link to it
-4. Use this ID/link when talking to Cursor
-
-## Asset Management
-
-Assets are automatically handled when:
-- Accessing components with images
-- Working with symbols
-- Handling exported assets
-
-The server will automatically:
-- Download required assets
-- Manage asset versions
-- Handle asset references in components
+- "Show me the details of the layer with ID 12345"
+- "Create a blue rectangle with width 300 and height 200"
+- "Add a text layer with the content 'Hello World'"
 
 ## Troubleshooting
 
@@ -209,6 +157,7 @@ The server will automatically:
 - **Connection Errors**: Make sure your server is running and the port is accessible
 - **Authentication Failures**: Verify your Sketch API key is correct
 - **File Parsing Issues**: Ensure your Sketch file is valid and not corrupted
+- **WebSocket Connection Failed**: Ensure the port is not blocked by a firewall
 
 ### Logs
 

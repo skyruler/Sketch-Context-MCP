@@ -1,8 +1,8 @@
 {
-  "name": "Sketch Selection Helper",
-  "identifier": "com.sketch-context-mcp.selection-helper",
+  "name": "Sketch Context MCP",
+  "identifier": "com.sketch-context-mcp.plugin",
   "version": "1.0",
-  "description": "Copy selection IDs to clipboard for use with Sketch Context MCP",
+  "description": "Connect Sketch to Cursor AI using Model Context Protocol (MCP)",
   "author": "Sketch Context MCP",
   "authorEmail": "joshua@jshmllr.com",
   "compatibleVersion": "70.0",
@@ -12,15 +12,28 @@
     {
       "script": "script.js",
       "handler": "onRun",
+      "shortcut": "cmd shift m",
+      "name": "Open MCP Interface",
+      "identifier": "open-mcp-interface"
+    },
+    {
+      "script": "script.js",
+      "handler": "onCopySelectionIds",
       "shortcut": "ctrl shift i",
       "name": "Copy Selection IDs",
       "identifier": "copy-selection-ids"
     }
   ],
   "menu": {
-    "title": "Sketch Selection Helper",
+    "title": "Sketch Context MCP",
     "items": [
+      "open-mcp-interface",
       "copy-selection-ids"
     ]
-  }
+  },
+  "resources": [
+    "UI.html"
+  ],
+  "disableCocoaScriptPreprocessor": true,
+  "appcast": "https://raw.githubusercontent.com/yourusername/sketch-context-mcp/master/.appcast.xml"
 } 

@@ -13,6 +13,7 @@ const bodyParser = require('body-parser');
 const readline = require('readline');
 const tmp = require('tmp');
 const { createServer } = require('http');
+const WebSocket = require('ws');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -57,8 +58,147 @@ const httpServer = createServer(app);
 app.use(cors());
 app.use(bodyParser.json());
 
-// Store connected clients for SSE
+// WebSocket channels and clients
+const channels = new Map();
 const clients = new Set();
+const pendingRequests = new Map();
+
+// Initialize WebSocket server
+const wss = new WebSocket.Server({ server: httpServer });
+
+wss.on('connection', (ws) => {
+  console.log('WebSocket client connected');
+  clients.add(ws);
+
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message);
+      handleWebSocketMessage(ws, data);
+    } catch (error) {
+      console.error('Error processing WebSocket message:', error);
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Invalid message format'
+      }));
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('WebSocket client disconnected');
+    clients.delete(ws);
+    
+    // Remove client from all channels
+    for (const [channelName, channelClients] of channels.entries()) {
+      if (channelClients.has(ws)) {
+        channelClients.delete(ws);
+        if (channelClients.size === 0) {
+          channels.delete(channelName);
+        }
+      }
+    }
+  });
+
+  // Send initial connection confirmation
+  ws.send(JSON.stringify({
+    type: 'connected',
+    message: 'Connected to Sketch MCP server'
+  }));
+});
+
+// Handle WebSocket messages
+function handleWebSocketMessage(ws, data) {
+  console.log('Received WebSocket message:', data);
+
+  // Handle joining a channel
+  if (data.type === 'join') {
+    const channelName = data.channel;
+    if (!channelName) {
+      return ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Channel name is required'
+      }));
+    }
+
+    // Create the channel if it doesn't exist
+    if (!channels.has(channelName)) {
+      channels.set(channelName, new Set());
+    }
+
+    // Add the client to the channel
+    channels.get(channelName).add(ws);
+
+    // Send confirmation
+    ws.send(JSON.stringify({
+      type: 'system',
+      channel: channelName,
+      message: { result: true }
+    }));
+
+    console.log(`Client joined channel: ${channelName}`);
+    return;
+  }
+
+  // Handle messages to be forwarded to a channel
+  if (data.type === 'message' && data.channel) {
+    const channelName = data.channel;
+    const channelClients = channels.get(channelName);
+
+    if (!channelClients) {
+      return ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Channel not found'
+      }));
+    }
+
+    // Store request ID if present for response routing
+    if (data.id) {
+      pendingRequests.set(data.id, ws);
+      
+      // Set timeout to clean up pending requests after 30 seconds
+      setTimeout(() => {
+        if (pendingRequests.has(data.id)) {
+          pendingRequests.delete(data.id);
+        }
+      }, 30000);
+    }
+
+    // Forward the message to all clients in the channel except the sender
+    channelClients.forEach(client => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'message',
+          channel: channelName,
+          message: data.message
+        }));
+      }
+    });
+
+    return;
+  }
+  
+  // Handle command execution responses
+  if (data.id && pendingRequests.has(data.id)) {
+    const requester = pendingRequests.get(data.id);
+    pendingRequests.delete(data.id);
+    
+    if (requester && requester.readyState === WebSocket.OPEN) {
+      requester.send(JSON.stringify({
+        id: data.id,
+        type: 'message',
+        result: data.result,
+        error: data.error
+      }));
+    }
+    
+    return;
+  }
+
+  // Unknown message type
+  ws.send(JSON.stringify({
+    type: 'error',
+    message: 'Unknown message type or format'
+  }));
+}
 
 // SSE endpoint for Cursor to connect to
 app.get('/sse', (req, res) => {
@@ -130,6 +270,66 @@ const TOOLS = [
       },
       required: ['url', 'selectionIds'],
     },
+  },
+  {
+    name: 'create_rectangle',
+    description: 'Create a new rectangle in the Sketch document',
+    parameters: {
+      type: 'object',
+      properties: {
+        x: {
+          type: 'number',
+          description: 'X position of the rectangle'
+        },
+        y: {
+          type: 'number',
+          description: 'Y position of the rectangle'
+        },
+        width: {
+          type: 'number',
+          description: 'Width of the rectangle'
+        },
+        height: {
+          type: 'number',
+          description: 'Height of the rectangle'
+        },
+        color: {
+          type: 'string',
+          description: 'Fill color of the rectangle (hex format)'
+        }
+      },
+      required: ['width', 'height'],
+    },
+  },
+  {
+    name: 'create_text',
+    description: 'Create a new text layer in the Sketch document',
+    parameters: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'Text content'
+        },
+        x: {
+          type: 'number',
+          description: 'X position of the text layer'
+        },
+        y: {
+          type: 'number',
+          description: 'Y position of the text layer'
+        },
+        fontSize: {
+          type: 'number',
+          description: 'Font size'
+        },
+        color: {
+          type: 'string',
+          description: 'Text color (hex format)'
+        }
+      },
+      required: ['text'],
+    },
   }
 ];
 
@@ -159,6 +359,10 @@ app.post('/messages', async (req, res) => {
         result = await listSketchComponents(params.url);
       } else if (tool === 'get_selection') {
         result = await getSketchSelection(params.url, params.selectionIds);
+      } else if (tool === 'create_rectangle') {
+        result = await forwardToWebSocketClients('create_rectangle', params);
+      } else if (tool === 'create_text') {
+        result = await forwardToWebSocketClients('create_text', params);
       } else {
         return res.status(400).json({
           type: 'error',
@@ -186,6 +390,47 @@ app.post('/messages', async (req, res) => {
   }
 });
 
+// Forward a command to all connected WebSocket clients
+async function forwardToWebSocketClients(command, params) {
+  return new Promise((resolve, reject) => {
+    if (clients.size === 0) {
+      return reject(new Error('No connected Sketch instances'));
+    }
+    
+    const requestId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    let responseReceived = false;
+    
+    // Store the request handlers
+    pendingRequests.set(requestId, {
+      resolve,
+      reject,
+      timeout: setTimeout(() => {
+        if (!responseReceived) {
+          pendingRequests.delete(requestId);
+          reject(new Error('Request timed out'));
+        }
+      }, 30000)
+    });
+    
+    // Send to all WebSocket clients in all channels
+    for (const [channelName, channelClients] of channels.entries()) {
+      channelClients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'message',
+            channel: channelName,
+            message: {
+              id: requestId,
+              command,
+              params
+            }
+          }));
+        }
+      });
+    }
+  });
+}
+
 // Main endpoint for basic info
 app.get('/', (req, res) => {
   res.send(`
@@ -193,6 +438,7 @@ app.get('/', (req, res) => {
     <p>Server is running!</p>
     <p>SSE endpoint available at <a href="/sse">http://localhost:${config.port}/sse</a></p>
     <p>Message endpoint available at http://localhost:${config.port}/messages</p>
+    <p>WebSocket endpoint available at ws://localhost:${config.port}</p>
   `);
 });
 
@@ -420,7 +666,11 @@ function extractDocumentIdFromUrl(url) {
 // Function to broadcast messages to all connected SSE clients
 function broadcast(message) {
   for (const client of clients) {
-    client.write(`data: ${JSON.stringify(message)}\n\n`);
+    if (client.write) { // SSE client
+      client.write(`data: ${JSON.stringify(message)}\n\n`);
+    } else if (client.readyState === WebSocket.OPEN) { // WebSocket client
+      client.send(JSON.stringify(message));
+    }
   }
 }
 
@@ -456,6 +706,10 @@ if (config.isStdioMode) {
           result = await listSketchComponents(params.url);
         else if (tool === 'get_selection')
           result = await getSketchSelection(params.url, params.selectionIds);
+        else if (tool === 'create_rectangle')
+          result = await forwardToWebSocketClients('create_rectangle', params);
+        else if (tool === 'create_text')
+          result = await forwardToWebSocketClients('create_text', params);
         else
           throw new Error(`Unknown tool: ${tool}`);
         
@@ -572,5 +826,18 @@ async function getSketchSelection(url, selectionIds) {
 }
 
 httpServer.listen(config.port, () => {
-  console.log(`Sketch MCP Server is running on port ${config.port}`);
+  console.log(`
+Sketch Context MCP Server is running on port ${config.port}
+HTTP endpoints:
+- http://localhost:${config.port} (Info page)
+- http://localhost:${config.port}/sse (Server-sent events for Cursor)
+- http://localhost:${config.port}/messages (Message endpoint for tools)
+WebSocket endpoint:
+- ws://localhost:${config.port} (For Sketch plugin connections)
+
+To configure Cursor to use this server:
+1. Open Cursor and go to Settings > Features > Context
+2. Add an MCP server with the URL: http://localhost:${config.port}/sse
+3. Connect the Sketch plugin to this server on port ${config.port}
+  `);
 });
