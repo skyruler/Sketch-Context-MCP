@@ -16,6 +16,7 @@ This tool allows Cursor IDE to access and interpret Sketch design files, enablin
 2. Implementing the MCP protocol that Cursor or other IDEs use for context
 3. Allowing you to reference specific components and layers from your Sketch files
 4. Providing a UI interface for Sketch that communicates with Cursor
+5. Enabling real-time bidirectional communication between Sketch and Cursor
 
 ## Components
 
@@ -23,6 +24,22 @@ This project consists of two main components:
 
 1. **MCP Server**: A Node.js server that implements the Model Context Protocol to provide Sketch file data to Cursor IDE
 2. **Sketch Plugin**: A Sketch plugin with UI interface that communicates with the MCP server via WebSockets
+
+## Available MCP Tools
+
+The server provides the following tools to Cursor:
+
+- `get_file`: Retrieve contents of a Sketch file or specific node within it
+- `list_components`: List all components/symbols in a Sketch file
+- `get_selection`: Get information about currently selected elements
+- `create_rectangle`: Create new rectangles with specified dimensions and properties
+- `create_text`: Create new text elements with custom content and styling
+
+These tools enable Cursor to:
+- Access and inspect Sketch design files
+- Query specific components and layers
+- Create and modify design elements through natural language commands
+- Maintain real-time synchronization with Sketch
 
 ## Supported Features
 
