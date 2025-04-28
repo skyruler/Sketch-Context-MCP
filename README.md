@@ -61,8 +61,8 @@ These tools enable Cursor to:
 
 - Node.js (v14 or later)
 - Sketch (v70 or later)
-- Cursor IDE or similar
-- A Sketch account with API access (only needed for Sketch Cloud files)
+- Cursor IDE, VS Code or similar
+- A Sketch account (local) or use API access (Sketch Cloud files)
 
 ### Installation
 
@@ -85,7 +85,7 @@ npx sketch-context-mcp --local-file=/path/to/your/file.sketch
 
 ### Installing the Sketch Plugin
 
-1. Download the latest release of the plugin from the [releases page](https://github.com/yourusername/sketch-context-mcp/releases)
+1. Download the latest release of the plugin from the [releases page](https://github.com/jshmllr/sketch-context-mcp/releases)
 2. Double-click the `.sketchplugin` file to install it in Sketch
 3. The plugin will be available in Sketch under Plugins > Sketch Context MCP
 
