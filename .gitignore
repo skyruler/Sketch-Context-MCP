@@ -21,6 +21,7 @@ Thumbs.db
 .vscode/
 *.sublime-project
 *.sublime-workspace
+*.code-workspace
 
 # Build artifacts
 dist/

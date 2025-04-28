@@ -2,6 +2,10 @@
 
 # Sketch Context MCP
 
+<a href="https://glama.ai/mcp/servers/@jshmllr/Sketch-Context-MCP">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@jshmllr/Sketch-Context-MCP/badge" />
+</a>
+
 A Model Context Protocol (MCP) server for integrating Sketch designs with IDEs such as Cursor, Cline, or Windsurf.
 
 ## Overview
@@ -173,4 +177,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

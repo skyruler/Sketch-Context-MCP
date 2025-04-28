@@ -13,8 +13,8 @@
     "start:cloud": "node index.js --sketch-api-key=$SKETCH_API_KEY"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Joshua Miller",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "adm-zip": "^0.5.16",
