@@ -114,6 +114,65 @@ To use this with Cursor:
    - Get details about specific elements: "Describe the button in the header"
    - Create new elements: "Create a rectangle with width 200 and height 100"
 
+## Obtaining a Sketch API Key
+
+The Sketch API key is an OAuth access token required for accessing Sketch Cloud-hosted files. Follow these steps to obtain and use the token:
+
+### Step 1: Authenticate with Sketch Cloud
+Use your Sketch Cloud credentials (email and password) to generate an access token by making a POST request to the authentication endpoint:
+
+```bash
+curl -X "POST" "https://auth.sketch.cloud/oauth/token" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email": "YOUR_EMAIL",
+    "password": "YOUR_PASSWORD",
+    "grant_type": "password"
+  }'
+```
+
+Replace `YOUR_EMAIL` and `YOUR_PASSWORD` with your Sketch Cloud account credentials.
+
+### Step 2: Access Token
+The response will include an `access_token`. This token serves as your API key for accessing Sketch Cloud-hosted files.
+
+### Step 3: Using the Token
+
+For security, it is recommended to pass the token as an environment variable:
+
+```bash
+export SKETCH_API_KEY=<your-access-token>
+```
+
+Or include it as a command-line argument:
+
+```bash
+sketch-context-mcp --sketch-api-key=<your-access-token>
+```
+
+### Step 4: Refreshing the Token
+If your token expires, use the `refresh_token` provided in the initial response to obtain a new access token.
+
+### Security Best Practices
+
+To ensure your API key is secure, follow these guidelines:
+
+- **Do Not Hard-Code the Key**: Never hard-code an API key into the application or source code. Instead, use environment variables or secret management tools.
+- **Use .env Files for Local Development**: Store your API key in a `.env` file and load it using a library like `dotenv`:
+
+  ```
+  SKETCH_API_KEY=<your-access-token>
+  ```
+
+  Ensure the `.env` file is added to `.gitignore` to avoid accidental exposure.
+- **Rotate Tokens Regularly**: If your token is leaked or compromised, revoke it and generate a new one immediately.
+- **Monitor and Audit**: Use tools to scan your repository for exposed credentials (e.g., GitHub’s secret scanning feature).
+- **Use Short-Lived Tokens**: If possible, use short-lived tokens and refresh them as needed to minimize the impact of a leaked token.
+
+### How It Works in Sketch-Context-MCP
+
+The Sketch API key is required for accessing Sketch Cloud-hosted files. The server uses this key to authenticate requests to Sketch Cloud and retrieve the necessary design data. The key is passed securely via the `Authorization` header when making API requests.
+
 ## Configuration
 
 The server can be configured using either environment variables (via `.env` file) or command-line arguments. Command-line arguments take precedence over environment variables.
