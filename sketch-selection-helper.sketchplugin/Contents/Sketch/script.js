@@ -90,7 +90,7 @@ function createPanel(options, context) {
   );
   
   // Set up communication between JavaScript and native code
-  var handler = WebViewMessageHandler.alloc().init();
+  var handler = new WebViewMessageHandler();
   handler.context = context;
   handler.panel = panel;
   contentController.addScriptMessageHandler_name(handler, "sketchPlugin");
